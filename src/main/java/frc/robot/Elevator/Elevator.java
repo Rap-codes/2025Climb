@@ -4,14 +4,17 @@
 package frc.robot.Elevator;
 
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.SparkBase.PersistMode;
+import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
+import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
-import com.revrobotics.spark.SparkClosedLoopController;
-import edu.wpi.first.wpilibj.motorcontrol.Spark;
+
 import edu.wpi.first.wpilibj2.command.SubsystemBase;;
 /** Add your docs here. */
-public class Climber extends SubsystemBase{
+public class Elevator extends SubsystemBase{
     private final SparkMax rightMotor;
     private final SparkMax leftMotor;
 
@@ -22,18 +25,28 @@ public class Climber extends SubsystemBase{
     
 
 
-    public Climber(int leftMotorID, int rightMotorID) {
-        SparkMax rightMotor = new SparkMax(rightMotorID, MotorType.kBrushless);
-        SparkMax leftMotor = new SparkMax(leftMotorID, MotorType.kBrushless);
-
+    public Elevator(int leftMotorID, int rightMotorID) {
         SparkMaxConfig leftMotorConfig = new SparkMaxConfig();
-        leftMotorConfig.inverted(false);        
+        leftMotor = new SparkMax(leftMotorID, MotorType.kBrushless);
 
-        SparkMaxConfig rightConfig = new SparkMaxConfig();
-        rightConfig.inverted(true);
-        rightConfig.follow(leftMotorID);
-
-        leftEncoder = leftMotorID.getEncoder();
+        leftMotorConfig
+            .inverted(false)
+            .idleMode(IdleMode.kBrake);
+        leftMotorConfig.encoder
+                .positionConversionFactor(ENCODER_TICKS_PER_INCH)
+                .velocityConversionFactor(ENCODER_TICKS_PER_INCH);
+        leftMotorConfig.closedLoop
+            .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
+            .pid(1.0, 0.0, 0.0);
+        leftMotor.configure(leftMotorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+        
+         rightMotor = new SparkMax(rightMotorID, MotorType.kBrushless);
+         SparkMaxConfig rightMotorConfig = new SparkMaxConfig();
+        rightMotorConfig
+            .inverted(true)
+            .follow(leftMotorID);    
+        leftEncoder = leftMotor.getEncoder();    
+        
 
     }
     

@@ -9,11 +9,11 @@ import java.util.function.DoubleSupplier;
 import edu.wpi.first.wpilibj2.command.Command;
 
 /* You should consider using the more terse Command factories API instead https://docs.wpilib.org/en/stable/docs/software/commandbased/organizing-command-based.html#defining-commands */
-public class MoveClimber extends Command {
-  private final Climber climber;
+public class MoveElevator extends Command {
+  private final Elevator climber;
   private final DoubleSupplier speedSupplier;
   /** Creates a new MoveClimber. */
-  public MoveClimber(Climber climber, DoubleSupplier inputSpeedSupplier) {
+  public MoveElevator(Elevator climber, DoubleSupplier inputSpeedSupplier) {
     this.climber = climber;
     speedSupplier = inputSpeedSupplier;
     addRequirements(climber);

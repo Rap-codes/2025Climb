@@ -5,8 +5,8 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
-import frc.robot.Elevator.Climber;
-import frc.robot.Elevator.MoveClimber;
+import frc.robot.Elevator.Elevator;
+import frc.robot.Elevator.MoveElevator;
 import frc.robot.commands.Autos;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -26,10 +26,10 @@ public class RobotContainer {
   private final CommandXboxController m_driverController =
       new CommandXboxController(OperatorConstants.kDriverControllerPort);
 
-  private final Climber climber;
+  private final Elevator climber;
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
-    climber = new Climber(1,2);
+    climber = new Elevator(1, 2);
 
     // Configure the trigger bindings
     configureBindings();
@@ -37,8 +37,8 @@ public class RobotContainer {
 
   private void configureBindings() {
     // Run the climber up with the right bumper
-    m_driverController.rightBumper().whileTrue(new MoveClimber(climber, () -> 0.5));
-    m_driverController.leftBumper().whileTrue((new MoveClimber(climber, () -> -0.5)));
+    m_driverController.rightBumper().whileTrue(new MoveElevator(climber, () -> 0.5));
+    m_driverController.leftBumper().whileTrue((new MoveElevator(climber, () -> -0.5)));
 
   }
 
