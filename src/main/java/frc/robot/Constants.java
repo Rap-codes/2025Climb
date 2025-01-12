@@ -20,6 +20,6 @@ public final class Constants {
     public static class Elevator {
       public static final int leftMotorID = 1;
       public static final int rightMotorID = 2;
-      
+      public static final double inPerRot = 6;
     }
 }
