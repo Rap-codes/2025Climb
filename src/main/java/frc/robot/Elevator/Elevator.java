@@ -3,76 +3,83 @@
 // the WPILib BSD license file in the root directory of this project.
 package frc.robot.Elevator;
 
+import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.spark.SparkBase.PersistMode;
 import com.revrobotics.spark.SparkBase.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.ClosedLoopConfig.FeedbackSensor;
 
-import edu.wpi.first.wpilibj2.command.SubsystemBase;;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.Constants;;
 /** Add your docs here. */
 public class Elevator extends SubsystemBase{
     private final SparkMax rightMotor;
     private final SparkMax leftMotor;
+    private final AbsoluteEncoder leftAbsEncoder;
 
-    private final RelativeEncoder leftEncoder;
-
-    private static final double MAX_HEIGHT = 62.5;
-    private static final double ENCODER_TICKS_PER_INCH = 1.0; //Ticks per inch = Distance per rotation / Encoder ticks per rotation
+    double offset = 0;
     
 
 
     public Elevator(int leftMotorID, int rightMotorID) {
-        SparkMaxConfig leftMotorConfig = new SparkMaxConfig();
         leftMotor = new SparkMax(leftMotorID, MotorType.kBrushless);
-
+        SparkMaxConfig leftMotorConfig = new SparkMaxConfig();
         leftMotorConfig
             .inverted(false)
             .idleMode(IdleMode.kBrake);
-        leftMotorConfig.encoder
-                .positionConversionFactor(ENCODER_TICKS_PER_INCH)
-                .velocityConversionFactor(ENCODER_TICKS_PER_INCH);
-        leftMotorConfig.closedLoop
-            .feedbackSensor(FeedbackSensor.kPrimaryEncoder)
-            .pid(1.0, 0.0, 0.0);
-        leftMotor.configure(leftMotorConfig, ResetMode.kNoResetSafeParameters, PersistMode.kPersistParameters);
+        leftMotorConfig.closedLoop.feedbackSensor(FeedbackSensor.kAbsoluteEncoder);
+        leftMotorConfig.absoluteEncoder.positionConversionFactor(Constants.Elevator.inPerRot);
+        leftMotor.configure(leftMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
         
-         rightMotor = new SparkMax(rightMotorID, MotorType.kBrushless);
-         SparkMaxConfig rightMotorConfig = new SparkMaxConfig();
+        rightMotor = new SparkMax(rightMotorID, MotorType.kBrushless);
+        SparkMaxConfig rightMotorConfig = new SparkMaxConfig();
         rightMotorConfig
-            .inverted(true)
-            .follow(leftMotorID);    
-        leftEncoder = leftMotor.getEncoder();    
-        
+            // .inverted(true)
+            .idleMode(IdleMode.kBrake)
+            .follow(leftMotorID, true);
 
-    }
-    
+        rightMotor.configure(rightMotorConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-    private boolean canMove(double speed) {
-        double currentHeight = leftEncoder.getPosition() / ENCODER_TICKS_PER_INCH;
-        if (speed > 0 && currentHeight >= MAX_HEIGHT) {
-            return false; //prevnt moving up if already at max height
-        }
-        if (speed < 0 && currentHeight <= 0) {
-            return false; //prevent moving down if already at min height
-        }
-        return true; //safe movement
+        leftAbsEncoder = leftMotor.getAbsoluteEncoder();
     }
+
+    @Override
+    public void periodic() {
+        SmartDashboard.putNumber("/Elevator/Height", getPosition());
+        SmartDashboard.putNumber("/Elevator/Velocity", leftAbsEncoder.getVelocity());
+    }
+
+    // private boolean canMove(double speed) {
+    //     double currentHeight = leftEncoder.getPosition() / ENCODER_TICKS_PER_INCH;
+    //     if (speed > 0 && currentHeight >= MAX_HEIGHT) {
+    //         return false; //prevnt moving up if already at max height
+    //     }
+    //     if (speed < 0 && currentHeight <= 0) {
+    //         return false; //prevent moving down if already at min height
+    //     }
+    //     return true; //safe movement
+    // }
 
       // Method to set the speed of the left motor (right motor follows)
     public void setSpeed(double speed) {
-        if (canMove(speed)) {
+        // if (canMove(speed)) {
             leftMotor.set(speed);
-        } else {
-            stop();
-        }
+        // } else {
+            // stop();
+        // }
+    }
+
+    public double getPosition() {
+        return leftAbsEncoder.getPosition() - offset;
     }
 
     public void resetEncoder () {
-        leftEncoder.setPosition(0);
+        offset = getPosition();
     }
 
     public void stop() {
